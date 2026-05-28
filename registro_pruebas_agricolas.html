@@ -5,24 +5,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Registro de Pruebas Agrícolas</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,-apple-system,sans-serif;background:#f5f5f0;color:#1a1a1a;font-size:15px;min-height:100vh}
-.app{max-width:920px;margin:0 auto;padding:1.5rem}
-h1{font-size:20px;font-weight:600;display:flex;align-items:center;gap:8px}
+.app{max-width:940px;margin:0 auto;padding:1.5rem}
 .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;gap:12px;flex-wrap:wrap}
+h1{font-size:20px;font-weight:600;display:flex;align-items:center;gap:8px}
 .btn-green{background:#1D9E75;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:14px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
 .btn-green:hover{background:#0F6E56}
 .btn-blue{background:#185FA5;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
 .btn-blue:hover{background:#0C447C}
 .btn-gray{background:#fff;color:#555;border:1px solid #ccc;border-radius:8px;padding:8px 14px;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
 .btn-gray:hover{background:#f5f5f5}
-.btn-red{background:#dc2626;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
-.btn-red:hover{background:#b91c1c}
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.25rem}
 .stat{background:#fff;border-radius:8px;padding:12px 16px;border:1px solid #e8e8e4}
 .stat-lbl{font-size:12px;color:#888;margin-bottom:3px}
-.stat-v{font-size:22px;font-weight:600;color:#1a1a1a}
+.stat-v{font-size:22px;font-weight:600}
 .filters{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;align-items:center}
 select,input[type=text],input[type=date],textarea{font-size:13px;padding:7px 10px;border-radius:8px;border:1px solid #ccc;background:#fff;color:#1a1a1a;font-family:inherit}
 select:focus,input:focus,textarea:focus{outline:none;border-color:#1D9E75;box-shadow:0 0 0 2px rgba(29,158,117,0.15)}
@@ -31,14 +30,15 @@ select:focus,input:focus,textarea:focus{outline:none;border-color:#1D9E75;box-sh
 .card{background:#fff;border:1px solid #e8e8e4;border-radius:12px;padding:14px 16px;cursor:pointer;transition:border-color .15s,box-shadow .15s}
 .card:hover{border-color:#1D9E75;box-shadow:0 2px 8px rgba(0,0,0,0.07)}
 .card-top{display:flex;justify-content:space-between;gap:10px;margin-bottom:6px}
-.card-thumb{width:58px;height:58px;border-radius:8px;object-fit:cover;flex-shrink:0;border:1px solid #e8e8e4}
+.card-thumbs{display:flex;gap:4px;flex-shrink:0}
+.card-thumb{width:52px;height:52px;border-radius:7px;object-fit:cover;border:1px solid #e8e8e4}
 .badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;display:inline-block}
 .bc{background:#d4f5e9;color:#065f46}
 .be{background:#dbeafe;color:#1e40af}
 .bf{background:#dcfce7;color:#166534}
 .bp{background:#fef3c7;color:#92400e}
 .bpl{background:#ede9fe;color:#4c1d95}
-.card-title{font-size:15px;font-weight:600;color:#1a1a1a;margin:4px 0 6px}
+.card-title{font-size:15px;font-weight:600;margin:4px 0 6px}
 .card-desc{font-size:13px;color:#666;margin-bottom:10px;line-height:1.5}
 .card-foot{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:#999;flex-wrap:wrap;gap:6px}
 .foot-l{display:flex;gap:14px;flex-wrap:wrap}
@@ -46,75 +46,118 @@ select:focus,input:focus,textarea:focus{outline:none;border-color:#1D9E75;box-sh
 .bsm{font-size:12px;padding:5px 10px;border-radius:7px;border:1px solid #ddd;background:#fff;color:#555;cursor:pointer}
 .bsm:hover{background:#f5f5f5}
 .empty{text-align:center;padding:3rem;color:#aaa;font-size:14px}
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:100;align-items:flex-start;justify-content:center;padding:2rem;overflow-y:auto}
+
+/* Modal */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:100;align-items:flex-start;justify-content:center;padding:1.5rem;overflow-y:auto}
 .overlay.open{display:flex}
-.modal{background:#fff;border-radius:14px;padding:1.75rem;width:100%;max-width:560px;margin:auto}
+.modal{background:#fff;border-radius:14px;padding:1.75rem;width:100%;max-width:580px;margin:auto}
 .modal h2{font-size:16px;font-weight:600;margin-bottom:1.25rem}
 .frow{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
 .fg{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
 .fg label{font-size:12px;color:#666;font-weight:500}
 .fg textarea{resize:vertical;min-height:65px}
-.drop{border:2px dashed #ccc;border-radius:8px;padding:18px;text-align:center;cursor:pointer;font-size:13px;color:#aaa;margin-top:4px;transition:border-color .15s}
-.drop:hover{border-color:#1D9E75;color:#1D9E75}
-.prev{width:100%;height:120px;border-radius:8px;object-fit:cover;margin-top:8px;display:none;border:1px solid #e8e8e4}
 .mfoot{display:flex;justify-content:flex-end;gap:8px;margin-top:1.25rem;border-top:1px solid #f0f0f0;padding-top:1.25rem}
+
+/* Multi-photo upload */
+.photo-upload-area{border:2px dashed #ccc;border-radius:10px;padding:16px;text-align:center;cursor:pointer;transition:border-color .15s;margin-top:4px}
+.photo-upload-area:hover{border-color:#1D9E75;background:#f9fffe}
+.photo-upload-area p{font-size:13px;color:#aaa;margin-top:4px}
+.photo-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.photo-thumb-wrap{position:relative;width:72px;height:72px}
+.photo-thumb-wrap img{width:72px;height:72px;border-radius:8px;object-fit:cover;border:1px solid #e8e8e4}
+.photo-remove{position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:#dc2626;color:#fff;border:none;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;line-height:1}
+
+/* Detail page */
 .detail-page{display:none}
 .detail-page.open{display:block}
 .dc{background:#fff;border:1px solid #e8e8e4;border-radius:12px;padding:1.5rem}
 .dt{font-size:18px;font-weight:600;margin-bottom:8px}
-.dpho{width:100%;max-height:220px;object-fit:cover;border-radius:10px;margin-bottom:1.25rem;border:1px solid #e8e8e4}
+.detail-photos{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:1.25rem}
+.detail-photo{width:120px;height:90px;object-fit:cover;border-radius:8px;border:1px solid #e8e8e4;cursor:pointer;transition:opacity .15s}
+.detail-photo:hover{opacity:.85}
 .ds{margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid #f0f0f0}
 .ds h3{font-size:11px;font-weight:700;color:#999;margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em}
 .dg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .df label{font-size:11px;color:#aaa;display:block;margin-bottom:2px}
-.df p{font-size:14px;color:#1a1a1a}
-.upd{display:flex;flex-direction:column;gap:8px;margin-top:8px}
-.ui{background:#f9f9f7;border-radius:8px;padding:10px 12px;border:1px solid #f0f0ec}
-.ud{font-size:11px;color:#aaa}
-.ut{font-size:13px;color:#333;margin-top:2px;line-height:1.5}
-.au{display:flex;gap:8px;margin-top:10px}
-.au input{flex:1}
-.bbk{font-size:13px;color:#888;background:none;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:5px;margin-bottom:1rem;padding:0}
-.bbk:hover{color:#1a1a1a}
-.export-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;gap:1.5rem}
-.login-screen h2{font-size:22px;font-weight:600;color:#1a1a1a}
-.login-screen p{font-size:15px;color:#666;max-width:400px;line-height:1.6}
-.login-box{background:#fff;border-radius:14px;padding:2.5rem;border:1px solid #e8e8e4;display:flex;flex-direction:column;align-items:center;gap:1.25rem;min-width:340px}
-.user-chip{display:flex;align-items:center;gap:10px;background:#f5f5f0;border-radius:8px;padding:8px 12px;font-size:13px;color:#555}
-.user-chip img{width:28px;height:28px;border-radius:50%}
-.sync-bar{display:flex;align-items:center;gap:8px;font-size:12px;color:#888;margin-bottom:.5rem}
-.sync-dot{width:8px;height:8px;border-radius:50%;background:#1D9E75}
+.df p{font-size:14px}
+
+/* Timeline */
+.timeline{display:flex;flex-direction:column;gap:0;margin-top:10px}
+.tl-item{display:flex;gap:12px;padding-bottom:20px;position:relative}
+.tl-item:last-child{padding-bottom:0}
+.tl-left{display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:32px}
+.tl-dot{width:12px;height:12px;border-radius:50%;background:#1D9E75;border:2px solid #fff;box-shadow:0 0 0 2px #1D9E75;flex-shrink:0;margin-top:3px}
+.tl-line{width:2px;background:#e8e8e4;flex:1;margin-top:4px}
+.tl-item:last-child .tl-line{display:none}
+.tl-content{flex:1;padding-bottom:4px}
+.tl-date{font-size:11px;color:#aaa;margin-bottom:4px;font-weight:500}
+.tl-author{font-size:11px;color:#1D9E75;font-weight:600}
+.tl-text{font-size:13px;color:#333;line-height:1.6;margin-bottom:8px}
+.tl-photos{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.tl-photo{width:80px;height:60px;object-fit:cover;border-radius:6px;border:1px solid #e8e8e4;cursor:pointer}
+.tl-photo:hover{opacity:.85}
+
+/* Add update panel */
+.add-update-panel{background:#f9f9f7;border:1px solid #e8e8e4;border-radius:10px;padding:14px;margin-top:14px}
+.add-update-panel h4{font-size:12px;font-weight:600;color:#666;margin-bottom:10px;text-transform:uppercase;letter-spacing:.04em}
+.au-input{width:100%;margin-bottom:8px}
+.au-photos{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.au-photo-wrap{position:relative;width:60px;height:60px}
+.au-photo-wrap img{width:60px;height:60px;border-radius:6px;object-fit:cover;border:1px solid #e8e8e4}
+.au-photo-remove{position:absolute;top:-5px;right:-5px;width:16px;height:16px;border-radius:50%;background:#dc2626;color:#fff;border:none;cursor:pointer;font-size:10px;display:flex;align-items:center;justify-content:center}
+.au-actions{display:flex;align-items:center;gap:8px}
+.au-photo-btn{font-size:12px;padding:6px 10px;border-radius:7px;border:1px solid #ccc;background:#fff;color:#555;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+.au-photo-btn:hover{background:#f5f5f5}
+
+/* Lightbox */
+.lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:200;align-items:center;justify-content:center;cursor:zoom-out}
+.lightbox.open{display:flex}
+.lightbox img{max-width:92vw;max-height:90vh;border-radius:10px;object-fit:contain}
+
+/* Login */
+.login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:70vh;text-align:center}
+.login-box{background:#fff;border-radius:14px;padding:2.5rem;border:1px solid #e8e8e4;display:flex;flex-direction:column;align-items:center;gap:1.25rem;min-width:320px;max-width:400px}
+.login-box h2{font-size:22px;font-weight:600}
+.login-box p{font-size:14px;color:#666;line-height:1.6}
+
+/* Sync */
+.sync-bar{display:flex;align-items:center;gap:6px;font-size:12px;color:#888}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:#1D9E75;flex-shrink:0}
 .sync-dot.syncing{background:#f59e0b;animation:pulse 1s infinite}
 .sync-dot.error{background:#dc2626}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:#1a1a1a;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;z-index:999;display:none;animation:fadein .2s}
-@keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-.spinner{display:inline-block;width:16px;height:16px;border:2px solid #ccc;border-top-color:#1D9E75;border-radius:50%;animation:spin .7s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Toast */
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:#1a1a1a;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;z-index:999;display:none}
+
+.bbk{font-size:13px;color:#888;background:none;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:5px;margin-bottom:1rem;padding:0}
+.bbk:hover{color:#1a1a1a}
+.export-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 @media(max-width:600px){.stats{grid-template-columns:repeat(2,1fr)}.frow{grid-template-columns:1fr}.dg{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <div class="app">
-
-<!-- Toast -->
 <div class="toast" id="toast"></div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox"><img id="lb-img" src="" alt=""></div>
 
 <!-- Login -->
 <div id="login-screen" class="login-screen">
   <div class="login-box">
-    <div style="font-size:40px">🌿</div>
-    <h2>Registro de Pruebas Agrícolas</h2>
-    <p>Inicia sesión con tu cuenta Google para acceder y sincronizar las pruebas en tiempo real.</p>
+    <div style="font-size:42px">🌿</div>
+    <h2>Pruebas Agrícolas SJF</h2>
+    <p>Inicia sesión con tu cuenta Google para acceder y registrar pruebas en tiempo real.</p>
     <div id="g_signin"></div>
-    <p style="font-size:12px;color:#bbb">Todos los datos se guardan en Google Sheets compartido</p>
+    <p style="font-size:11px;color:#ccc">Datos sincronizados con Google Sheets</p>
   </div>
 </div>
 
 <!-- App -->
 <div id="main-app" style="display:none">
 
+<!-- Modal nueva/editar prueba -->
 <div class="overlay" id="ov">
   <div class="modal">
     <h2 id="mt">Nueva prueba</h2>
@@ -123,38 +166,22 @@ select:focus,input:focus,textarea:focus{outline:none;border-color:#1D9E75;box-sh
       <div class="fg"><label>Campo *</label>
         <select id="fc">
           <option value="">Seleccionar campo...</option>
-          <option>Pintacura</option>
-          <option>Chalaco</option>
-          <option>San Ignacio</option>
-          <option>Valle Leyda</option>
+          <option>Pintacura</option><option>Chalaco</option><option>San Ignacio</option><option>Valle Leyda</option>
           <optgroup label="Alicura">
-            <option>Alicura Norte</option>
-            <option>Alicura Sur</option>
-            <option>La Isla</option>
+            <option>Alicura Norte</option><option>Alicura Sur</option><option>La Isla</option>
           </optgroup>
           <optgroup label="Ucuquer">
-            <option>Andalhue</option>
-            <option>El Pivote</option>
-            <option>La Avena</option>
-            <option>Cahuel</option>
-            <option>Los Zorros</option>
-            <option>El Estero</option>
+            <option>Andalhue</option><option>El Pivote</option><option>La Avena</option>
+            <option>Cahuel</option><option>Los Zorros</option><option>El Estero</option>
           </optgroup>
-          <option>San Vicente</option>
-          <option>Requínoa</option>
-          <option>Longaví</option>
+          <option>San Vicente</option><option>Requínoa</option><option>Longaví</option>
         </select>
       </div>
     </div>
     <div class="frow">
       <div class="fg"><label>Responsable *</label><input id="fr" type="text" placeholder="Nombre del encargado"></div>
       <div class="fg"><label>Estado</label>
-        <select id="fe">
-          <option>Planificada</option>
-          <option>En curso</option>
-          <option>Pausada</option>
-          <option>Finalizada</option>
-        </select>
+        <select id="fe"><option>Planificada</option><option>En curso</option><option>Pausada</option><option>Finalizada</option></select>
       </div>
     </div>
     <div class="frow">
@@ -163,11 +190,15 @@ select:focus,input:focus,textarea:focus{outline:none;border-color:#1D9E75;box-sh
     </div>
     <div class="fg"><label>Objetivo / descripción</label><textarea id="fd" placeholder="¿Qué se quiere probar y en qué condiciones?"></textarea></div>
     <div class="fg">
-      <label>Foto de la prueba</label>
-      <div class="drop" id="drop">📷 Haz clic para subir una foto<br><span style="font-size:12px">JPG, PNG, WEBP</span><input type="file" id="fp" accept="image/*" style="display:none"></div>
-      <img class="prev" id="pv" alt="Vista previa">
+      <label>Fotos de la prueba (puedes subir varias)</label>
+      <div class="photo-upload-area" id="drop" onclick="document.getElementById('fp').click()">
+        <div style="font-size:28px">📷</div>
+        <p>Haz clic para subir fotos · JPG, PNG, WEBP</p>
+        <input type="file" id="fp" accept="image/*" multiple style="display:none">
+      </div>
+      <div class="photo-grid" id="photo-grid"></div>
     </div>
-    <div class="fg"><label>Primera observación (opcional)</label><textarea id="fo" style="min-height:50px" placeholder="Notas iniciales..."></textarea></div>
+    <div class="fg"><label>Primera observación (opcional)</label><textarea id="fo" style="min-height:48px" placeholder="Notas iniciales..."></textarea></div>
     <div class="mfoot">
       <button class="btn-gray" id="bcan">Cancelar</button>
       <button class="btn-green" id="bsav">✓ Guardar prueba</button>
@@ -175,176 +206,125 @@ select:focus,input:focus,textarea:focus{outline:none;border-color:#1D9E75;box-sh
   </div>
 </div>
 
+<!-- Detalle -->
 <div class="detail-page" id="dp">
   <button class="bbk" id="bbk">← Volver al listado</button>
   <div class="dc" id="dc"></div>
 </div>
 
+<!-- Listado principal -->
 <div id="mv">
   <div class="topbar">
-    <h1>🌿 Registro de pruebas agrícolas</h1>
+    <h1>🌿 Pruebas Agrícolas SJF</h1>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <div class="sync-bar"><div class="sync-dot" id="sdot"></div><span id="slbl">Sincronizado</span></div>
-      <div id="user-chip" class="user-chip"></div>
+      <span id="user-name" style="font-size:13px;color:#555"></span>
       <button class="btn-gray" id="blog-out" style="font-size:12px;padding:6px 10px">Salir</button>
       <button class="btn-green" id="bnew">+ Nueva prueba</button>
     </div>
   </div>
-
   <div class="stats">
     <div class="stat"><div class="stat-lbl">Total pruebas</div><div class="stat-v" id="s0">0</div></div>
     <div class="stat"><div class="stat-lbl">En curso</div><div class="stat-v" id="s1">0</div></div>
     <div class="stat"><div class="stat-lbl">Finalizadas</div><div class="stat-v" id="s2">0</div></div>
     <div class="stat"><div class="stat-lbl">Campos activos</div><div class="stat-v" id="s3">0</div></div>
   </div>
-
   <div class="filters">
     <input class="filter-input" id="fsq" type="text" placeholder="🔍 Buscar prueba o responsable...">
     <select id="fsc">
       <option value="">Todos los campos</option>
       <option>Pintacura</option><option>Chalaco</option><option>San Ignacio</option><option>Valle Leyda</option>
-      <optgroup label="Alicura">
-        <option>Alicura Norte</option><option>Alicura Sur</option><option>La Isla</option>
-      </optgroup>
-      <optgroup label="Ucuquer">
-        <option>Andalhue</option><option>El Pivote</option><option>La Avena</option>
-        <option>Cahuel</option><option>Los Zorros</option><option>El Estero</option>
-      </optgroup>
+      <optgroup label="Alicura"><option>Alicura Norte</option><option>Alicura Sur</option><option>La Isla</option></optgroup>
+      <optgroup label="Ucuquer"><option>Andalhue</option><option>El Pivote</option><option>La Avena</option><option>Cahuel</option><option>Los Zorros</option><option>El Estero</option></optgroup>
       <option>San Vicente</option><option>Requínoa</option><option>Longaví</option>
     </select>
-    <select id="fse">
-      <option value="">Todos los estados</option>
-      <option>Planificada</option><option>En curso</option><option>Pausada</option><option>Finalizada</option>
-    </select>
+    <select id="fse"><option value="">Todos los estados</option><option>Planificada</option><option>En curso</option><option>Pausada</option><option>Finalizada</option></select>
     <div class="export-row">
       <select id="exc">
         <option value="">Exportar por campo...</option>
         <option value="__todos__">📋 Todos los campos</option>
         <option>Pintacura</option><option>Chalaco</option><option>San Ignacio</option><option>Valle Leyda</option>
         <option>Alicura Norte</option><option>Alicura Sur</option><option>La Isla</option>
-        <option>Andalhue</option><option>El Pivote</option><option>La Avena</option>
-        <option>Cahuel</option><option>Los Zorros</option><option>El Estero</option>
+        <option>Andalhue</option><option>El Pivote</option><option>La Avena</option><option>Cahuel</option><option>Los Zorros</option><option>El Estero</option>
         <option>San Vicente</option><option>Requínoa</option><option>Longaví</option>
       </select>
       <button class="btn-blue" id="bexp">⬇ Exportar Excel</button>
     </div>
   </div>
-
   <div class="cards" id="cc"></div>
 </div>
-
 </div><!-- /main-app -->
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-const CLIENT_ID = '851323035088-rs3n5nfqcjl4vq09bvs3t3sk6ciu0cd0.apps.googleusercontent.com';
-const SHEET_ID  = '13N-X9R5mVuABJROhU2r6uQJJkswEdSIF-1p2yZfBQS8';
-const SHEET_NAME = 'Pruebas';
-const SCOPES = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
+const CLIENT_ID='851323035088-rs3n5nfqcjl4vq09bvs3t3sk6ciu0cd0.apps.googleusercontent.com';
+const SHEET_ID='13N-X9R5mVuABJROhU2r6uQJJkswEdSIF-1p2yZfBQS8';
+const SHEET_NAME='Pruebas';
+const SCOPES='https://www.googleapis.com/auth/spreadsheets';
+const API='https://sheets.googleapis.com/v4/spreadsheets';
 
-let accessToken = null;
-let DB = [];
-let nid = 1;
-let eid = null, pp = null;
+let accessToken=null,DB=[],nid=1,eid=null,pendingPhotos=[],currentUser='',auPendingPhotos=[];
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 function initGsi(){
-  google.accounts.id.initialize({client_id: CLIENT_ID, callback: onIdToken});
-  google.accounts.id.renderButton(document.getElementById('g_signin'),{theme:'outline',size:'large',text:'signin_with',locale:'es'});
+  google.accounts.id.initialize({client_id:CLIENT_ID,callback:onIdToken});
+  google.accounts.id.renderButton(document.getElementById('g_signin'),{theme:'outline',size:'large',locale:'es'});
 }
-
 function onIdToken(resp){
-  // Exchange for access token via implicit flow
-  const client = google.accounts.oauth2.initTokenClient({
-    client_id: CLIENT_ID,
-    scope: SCOPES,
-    callback: (tokenResp) => {
-      if(tokenResp.access_token){
-        accessToken = tokenResp.access_token;
-        const payload = JSON.parse(atob(resp.credential.split('.')[1]));
-        showApp(payload);
-      }
-    }
+  const client=google.accounts.oauth2.initTokenClient({
+    client_id:CLIENT_ID,scope:SCOPES,
+    callback:(t)=>{if(t.access_token){accessToken=t.access_token;const p=JSON.parse(atob(resp.credential.split('.')[1]));currentUser=p.name||p.email;showApp();}}
   });
   client.requestAccessToken({prompt:''});
 }
-
-function showApp(user){
+function showApp(){
   document.getElementById('login-screen').style.display='none';
   document.getElementById('main-app').style.display='block';
-  document.getElementById('user-chip').innerHTML = `<span>${user.name}</span>`;
+  document.getElementById('user-name').textContent=currentUser;
   initSheet().then(loadData);
 }
-
 document.getElementById('blog-out').addEventListener('click',()=>{
-  google.accounts.id.disableAutoSelect();
-  accessToken=null;DB=[];
+  google.accounts.id.disableAutoSelect();accessToken=null;DB=[];
   document.getElementById('main-app').style.display='none';
   document.getElementById('login-screen').style.display='flex';
 });
 
 // ── Sheets API ────────────────────────────────────────────────────────────────
-const API = 'https://sheets.googleapis.com/v4/spreadsheets';
-
-async function req(method, url, body){
-  const r = await fetch(url,{method,headers:{'Authorization':'Bearer '+accessToken,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
-  if(!r.ok) throw new Error(await r.text());
+async function req(method,url,body){
+  const r=await fetch(url,{method,headers:{'Authorization':'Bearer '+accessToken,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
+  if(!r.ok)throw new Error(await r.text());
   return r.json();
 }
-
 async function initSheet(){
-  // Ensure header row exists
-  try{
-    const d = await req('GET',`${API}/${SHEET_ID}/values/${SHEET_NAME}!A1:A1`);
-    if(d.values) return; // sheet has data
-  }catch(e){}
-  // Try to create sheet tab
-  try{
-    await req('POST',`${API}/${SHEET_ID}:batchUpdate`,{requests:[{addSheet:{properties:{title:SHEET_NAME}}}]});
-  }catch(e){}
-  // Write header
-  await req('PUT',`${API}/${SHEET_ID}/values/${SHEET_NAME}!A1:L1?valueInputOption=RAW`,{
-    values:[['ID','Nombre','Campo','Responsable','Estado','Inicio','Fin','Descripcion','Photo','Updates','CreadoEn','CreadoPor']]
+  try{const d=await req('GET',`${API}/${SHEET_ID}/values/${SHEET_NAME}!A1:A1`);if(d.values)return;}catch(e){}
+  try{await req('POST',`${API}/${SHEET_ID}:batchUpdate`,{requests:[{addSheet:{properties:{title:SHEET_NAME}}}]});}catch(e){}
+  await req('PUT',`${API}/${SHEET_ID}/values/${SHEET_NAME}!A1:K1?valueInputOption=RAW`,{
+    values:[['ID','Nombre','Campo','Responsable','Estado','Inicio','Fin','Descripcion','Photos','Updates','CreadoEn']]
   });
 }
-
 async function loadData(){
   setSyncing(true);
   try{
-    const d = await req('GET',`${API}/${SHEET_ID}/values/${SHEET_NAME}!A2:L1000`);
-    const rows = d.values||[];
-    DB = rows.filter(r=>r[0]).map(r=>({
-      id: +r[0]||0,
-      nombre: r[1]||'',
-      campo: r[2]||'',
-      responsable: r[3]||'',
-      estado: r[4]||'Planificada',
-      inicio: r[5]||'',
-      fin: r[6]||'',
-      desc: r[7]||'',
-      photo: r[8]||null,
-      updates: safeJSON(r[9],[]),
-      _row: rows.indexOf(r)+2
+    const d=await req('GET',`${API}/${SHEET_ID}/values/${SHEET_NAME}!A2:K2000`);
+    const rows=d.values||[];
+    DB=rows.filter(r=>r[0]).map((r,i)=>({
+      id:+r[0]||0,nombre:r[1]||'',campo:r[2]||'',responsable:r[3]||'',
+      estado:r[4]||'Planificada',inicio:r[5]||'',fin:r[6]||'',desc:r[7]||'',
+      photos:safeJSON(r[8],[]),
+      updates:safeJSON(r[9],[]),
+      _row:i+2
     }));
-    nid = DB.length ? Math.max(...DB.map(p=>p.id))+1 : 1;
-    setSyncing(false,'Sincronizado');
-    render();
-  }catch(e){
-    setSyncing(false,'Error al cargar',true);
-    toast('Error al cargar datos: '+e.message);
-  }
+    nid=DB.length?Math.max(...DB.map(p=>p.id))+1:1;
+    setSyncing(false);render();
+  }catch(e){setSyncing(false,'Error al cargar',true);toast('Error: '+e.message);}
 }
-
 async function appendRow(p){
   await req('POST',`${API}/${SHEET_ID}/values/${SHEET_NAME}!A1:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,{
-    values:[[p.id,p.nombre,p.campo,p.responsable,p.estado,p.inicio,p.fin,p.desc,p.photo||'',JSON.stringify(p.updates),new Date().toISOString(),'']]
+    values:[[p.id,p.nombre,p.campo,p.responsable,p.estado,p.inicio,p.fin,p.desc,JSON.stringify(p.photos),JSON.stringify(p.updates),new Date().toISOString()]]
   });
 }
-
 async function updateRow(p){
-  const range = `${SHEET_NAME}!A${p._row}:L${p._row}`;
-  await req('PUT',`${API}/${SHEET_ID}/values/${range}?valueInputOption=RAW`,{
-    values:[[p.id,p.nombre,p.campo,p.responsable,p.estado,p.inicio,p.fin,p.desc,p.photo||'',JSON.stringify(p.updates),new Date().toISOString(),'']]
+  await req('PUT',`${API}/${SHEET_ID}/values/${SHEET_NAME}!A${p._row}:K${p._row}?valueInputOption=RAW`,{
+    values:[[p.id,p.nombre,p.campo,p.responsable,p.estado,p.inicio,p.fin,p.desc,JSON.stringify(p.photos),JSON.stringify(p.updates),new Date().toISOString()]]
   });
 }
 
@@ -353,15 +333,39 @@ function safeJSON(s,def){try{return JSON.parse(s);}catch(e){return def;}}
 const ALI=['Alicura Norte','Alicura Sur','La Isla'];
 const UCU=['Andalhue','El Pivote','La Avena','Cahuel','Los Zorros','El Estero'];
 function parent(f){if(ALI.includes(f))return'Alicura';if(UCU.includes(f))return'Ucuquer';return f;}
-function bc(e){return{['En curso']:'be',['Finalizada']:'bf',['Pausada']:'bp',['Planificada']:'bpl'}[e]||'bpl';}
+function bclass(e){return{['En curso']:'be',['Finalizada']:'bf',['Pausada']:'bp',['Planificada']:'bpl'}[e]||'bpl';}
 function setSyncing(on,lbl,err){
   const d=document.getElementById('sdot'),l=document.getElementById('slbl');
   d.className='sync-dot'+(on?' syncing':err?' error':'');
   l.textContent=lbl||(on?'Sincronizando...':'Sincronizado');
 }
-function toast(msg,dur=3000){const t=document.getElementById('toast');t.textContent=msg;t.style.display='block';setTimeout(()=>t.style.display='none',dur);}
+function toast(msg,dur=3500){const t=document.getElementById('toast');t.textContent=msg;t.style.display='block';setTimeout(()=>t.style.display='none',dur);}
+function today(){return new Date().toISOString().slice(0,10);}
 
-// ── Render ────────────────────────────────────────────────────────────────────
+async function resizeImage(file,maxW=800){
+  return new Promise(res=>{
+    const r=new FileReader();
+    r.onload=ev=>{
+      const img=new Image();
+      img.onload=()=>{
+        const canvas=document.createElement('canvas');
+        let w=img.width,h=img.height;
+        if(w>maxW){h=Math.round(h*maxW/w);w=maxW;}
+        canvas.width=w;canvas.height=h;
+        canvas.getContext('2d').drawImage(img,0,0,w,h);
+        res(canvas.toDataURL('image/jpeg',0.72));
+      };
+      img.src=ev.target.result;
+    };
+    r.readAsDataURL(file);
+  });
+}
+
+// Lightbox
+document.getElementById('lightbox').addEventListener('click',()=>document.getElementById('lightbox').classList.remove('open'));
+function openLightbox(src){document.getElementById('lb-img').src=src;document.getElementById('lightbox').classList.add('open');}
+
+// ── Render listado ────────────────────────────────────────────────────────────
 function filt(){
   const q=document.getElementById('fsq').value.toLowerCase();
   const fc=document.getElementById('fsc').value;
@@ -373,7 +377,6 @@ function filt(){
     return true;
   });
 }
-
 function stats(){
   const f=filt();
   document.getElementById('s0').textContent=f.length;
@@ -381,7 +384,6 @@ function stats(){
   document.getElementById('s2').textContent=f.filter(p=>p.estado==='Finalizada').length;
   document.getElementById('s3').textContent=new Set(f.filter(p=>p.estado!=='Finalizada').map(p=>p.campo)).size;
 }
-
 function render(){
   stats();
   const list=filt();
@@ -393,18 +395,18 @@ function render(){
         <div style="flex:1">
           <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:5px">
             <span class="badge bc">${parent(p.campo)!==p.campo?parent(p.campo)+' › ':''}${p.campo}</span>
-            <span class="badge ${bc(p.estado)}">${p.estado}</span>
+            <span class="badge ${bclass(p.estado)}">${p.estado}</span>
           </div>
           <div class="card-title">${p.nombre}</div>
         </div>
-        ${p.photo?`<img class="card-thumb" src="${p.photo}" alt="foto">`:''}
+        ${p.photos&&p.photos.length?`<div class="card-thumbs">${p.photos.slice(0,2).map(ph=>`<img class="card-thumb" src="${ph}" alt="foto">`).join('')}</div>`:''}
       </div>
       <div class="card-desc">${p.desc}</div>
       <div class="card-foot">
         <div class="foot-l">
           <span>👤 ${p.responsable}</span>
           <span>📅 ${p.inicio}</span>
-          <span>💬 ${p.updates.length} notas</span>
+          <span>💬 ${p.updates.length} actualizaciones</span>
         </div>
         <div class="acts">
           <button class="bsm" data-a="edit" data-id="${p.id}" onclick="event.stopPropagation()">✏ Editar</button>
@@ -418,18 +420,36 @@ function render(){
   cc.querySelectorAll('.card').forEach(c=>c.addEventListener('click',()=>detail(+c.dataset.id)));
 }
 
-// ── Detail ────────────────────────────────────────────────────────────────────
+// ── Detalle + Timeline ────────────────────────────────────────────────────────
+function renderTimeline(updates){
+  if(!updates.length)return'<p style="font-size:13px;color:#aaa">Sin actualizaciones aún.</p>';
+  return`<div class="timeline">${updates.map(u=>`
+    <div class="tl-item">
+      <div class="tl-left"><div class="tl-dot"></div><div class="tl-line"></div></div>
+      <div class="tl-content">
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:3px">
+          <span class="tl-date">📅 ${u.fecha}</span>
+          ${u.autor?`<span class="tl-author">· ${u.autor}</span>`:''}
+        </div>
+        <div class="tl-text">${u.texto}</div>
+        ${u.photos&&u.photos.length?`<div class="tl-photos">${u.photos.map(ph=>`<img class="tl-photo" src="${ph}" alt="foto" onclick="openLightbox('${ph}')">`).join('')}</div>`:''}
+      </div>
+    </div>
+  `).join('')}</div>`;
+}
+
 function detail(id){
   const p=DB.find(x=>x.id===id);if(!p)return;
+  auPendingPhotos=[];
   document.getElementById('mv').style.display='none';
   document.getElementById('dp').classList.add('open');
   document.getElementById('dc').innerHTML=`
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
       <span class="badge bc">${parent(p.campo)!==p.campo?parent(p.campo)+' › ':''}${p.campo}</span>
-      <span class="badge ${bc(p.estado)}">${p.estado}</span>
+      <span class="badge ${bclass(p.estado)}">${p.estado}</span>
     </div>
     <div class="dt">${p.nombre}</div>
-    ${p.photo?`<img class="dpho" src="${p.photo}" alt="foto">`:''}
+    ${p.photos&&p.photos.length?`<div class="detail-photos">${p.photos.map(ph=>`<img class="detail-photo" src="${ph}" alt="foto" onclick="openLightbox('${ph}')">`).join('')}</div>`:''}
     <div class="ds"><h3>Información general</h3>
       <div class="dg">
         <div class="df"><label>Responsable</label><p>${p.responsable}</p></div>
@@ -440,61 +460,102 @@ function detail(id){
     </div>
     <div class="ds"><h3>Actualizar estado</h3>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:6px">
-        <select id="det-e">
-          ${['Planificada','En curso','Pausada','Finalizada'].map(s=>`<option${s===p.estado?' selected':''}>${s}</option>`).join('')}
-        </select>
+        <select id="det-e">${['Planificada','En curso','Pausada','Finalizada'].map(s=>`<option${s===p.estado?' selected':''}>${s}</option>`).join('')}</select>
         <button class="btn-green" id="bue">Guardar estado</button>
       </div>
     </div>
-    <div class="ds"><h3>Historial de actualizaciones (${p.updates.length})</h3>
-      <div class="upd" id="ul">${renderUpdates(p.updates)}</div>
-      <div class="au">
-        <input type="text" id="nui" placeholder="Agregar nueva observación o resultado...">
-        <button class="btn-gray" id="bau">+ Agregar</button>
+    <div class="ds">
+      <h3>Evolución de la prueba (${p.updates.length} actualizaciones)</h3>
+      <div id="tl-container">${renderTimeline(p.updates)}</div>
+      <div class="add-update-panel">
+        <h4>➕ Agregar actualización</h4>
+        <textarea class="au-input" id="nui" rows="2" placeholder="Describe cómo va la prueba, observaciones, resultados..."></textarea>
+        <div class="au-photos" id="au-photos-grid"></div>
+        <div class="au-actions">
+          <button class="au-photo-btn" onclick="document.getElementById('au-fp').click()">📷 Agregar fotos</button>
+          <input type="file" id="au-fp" accept="image/*" multiple style="display:none">
+          <button class="btn-green" id="bau" style="margin-left:auto">Publicar actualización</button>
+        </div>
       </div>
     </div>
   `;
+
+  // Fotos en actualización
+  document.getElementById('au-fp').addEventListener('change',async e=>{
+    const files=Array.from(e.target.files);
+    for(const f of files){
+      const b64=await resizeImage(f,700);
+      auPendingPhotos.push(b64);
+    }
+    renderAuPhotos();
+    e.target.value='';
+  });
+
+  function renderAuPhotos(){
+    const grid=document.getElementById('au-photos-grid');
+    grid.innerHTML=auPendingPhotos.map((ph,i)=>`
+      <div class="au-photo-wrap">
+        <img src="${ph}" alt="foto">
+        <button class="au-photo-remove" onclick="auPendingPhotos.splice(${i},1);renderAuPhotos()">✕</button>
+      </div>
+    `).join('');
+  }
+
   document.getElementById('bau').onclick=async()=>{
-    const inp=document.getElementById('nui'),txt=inp.value.trim();if(!txt)return;
-    p.updates.push({fecha:new Date().toISOString().slice(0,10),texto:txt});
-    inp.value='';
-    document.getElementById('ul').innerHTML=renderUpdates(p.updates);
+    const txt=document.getElementById('nui').value.trim();
+    if(!txt&&!auPendingPhotos.length){toast('Escribe algo o agrega una foto.');return;}
+    p.updates.push({fecha:today(),autor:currentUser,texto:txt,photos:[...auPendingPhotos]});
+    auPendingPhotos=[];
+    document.getElementById('nui').value='';
+    document.getElementById('au-photos-grid').innerHTML='';
+    document.getElementById('tl-container').innerHTML=renderTimeline(p.updates);
     setSyncing(true);
-    try{await updateRow(p);setSyncing(false);}catch(e){setSyncing(false,'Error',true);toast('Error al guardar');}
+    try{await updateRow(p);setSyncing(false);toast('✓ Actualización guardada');}
+    catch(e){setSyncing(false,'Error',true);toast('Error al guardar');}
   };
+
   document.getElementById('bue').onclick=async()=>{
     p.estado=document.getElementById('det-e').value;
     setSyncing(true);
-    try{await updateRow(p);setSyncing(false);detail(id);}catch(e){setSyncing(false,'Error',true);toast('Error al guardar');}
+    try{await updateRow(p);setSyncing(false);detail(id);}
+    catch(e){setSyncing(false,'Error',true);toast('Error al guardar');}
   };
 }
 
-function renderUpdates(updates){
-  return updates.length
-    ? updates.map(u=>`<div class="ui"><div class="ud">📅 ${u.fecha}</div><div class="ut">${u.texto}</div></div>`).join('')
-    : '<p style="font-size:13px;color:#aaa;margin-top:6px">Sin actualizaciones aún.</p>';
+// ── Modal nueva/editar prueba ─────────────────────────────────────────────────
+function renderPhotoGrid(){
+  const grid=document.getElementById('photo-grid');
+  grid.innerHTML=pendingPhotos.map((ph,i)=>`
+    <div class="photo-thumb-wrap">
+      <img src="${ph}" alt="">
+      <button class="photo-remove" onclick="pendingPhotos.splice(${i},1);renderPhotoGrid()">✕</button>
+    </div>
+  `).join('');
 }
 
-// ── Modal ─────────────────────────────────────────────────────────────────────
+document.getElementById('fp').addEventListener('change',async e=>{
+  const files=Array.from(e.target.files);
+  for(const f of files){const b64=await resizeImage(f);pendingPhotos.push(b64);}
+  renderPhotoGrid();e.target.value='';
+});
+
 function omodal(clr){
-  pp=null;
-  document.getElementById('pv').style.display='none';
-  document.getElementById('fp').value='';
   if(clr){
-    eid=null;
+    eid=null;pendingPhotos=[];
     document.getElementById('mt').textContent='Nueva prueba';
     ['fn','fr','fo','fd'].forEach(i=>document.getElementById(i).value='');
     document.getElementById('fc').value='';
     document.getElementById('fe').value='Planificada';
-    document.getElementById('fi').value=new Date().toISOString().slice(0,10);
+    document.getElementById('fi').value=today();
     document.getElementById('ff').value='';
+    document.getElementById('photo-grid').innerHTML='';
   }
   document.getElementById('ov').classList.add('open');
 }
 
 function oedit(id){
   const p=DB.find(x=>x.id===id);if(!p)return;
-  eid=id;pp=p.photo||null;
+  eid=id;pendingPhotos=[...(p.photos||[])];
   document.getElementById('mt').textContent='Editar prueba';
   document.getElementById('fn').value=p.nombre;
   document.getElementById('fc').value=p.campo;
@@ -504,31 +565,9 @@ function oedit(id){
   document.getElementById('fe').value=p.estado;
   document.getElementById('fd').value=p.desc;
   document.getElementById('fo').value='';
-  if(p.photo){const img=document.getElementById('pv');img.src=p.photo;img.style.display='block';}
+  renderPhotoGrid();
   document.getElementById('ov').classList.add('open');
 }
-
-document.getElementById('drop').addEventListener('click',()=>document.getElementById('fp').click());
-document.getElementById('fp').addEventListener('change',e=>{
-  const f=e.target.files[0];if(!f)return;
-  // Resize image before storing
-  const reader=new FileReader();
-  reader.onload=ev=>{
-    const img=new Image();
-    img.onload=()=>{
-      const canvas=document.createElement('canvas');
-      const MAX=600;
-      let w=img.width,h=img.height;
-      if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
-      canvas.width=w;canvas.height=h;
-      canvas.getContext('2d').drawImage(img,0,0,w,h);
-      pp=canvas.toDataURL('image/jpeg',0.7);
-      const pv=document.getElementById('pv');pv.src=pp;pv.style.display='block';
-    };
-    img.src=ev.target.result;
-  };
-  reader.readAsDataURL(f);
-});
 
 document.getElementById('bnew').addEventListener('click',()=>omodal(true));
 document.getElementById('bcan').addEventListener('click',()=>document.getElementById('ov').classList.remove('open'));
@@ -542,49 +581,45 @@ document.getElementById('bsav').addEventListener('click',async()=>{
   const nombre=document.getElementById('fn').value.trim();
   const campo=document.getElementById('fc').value;
   const resp=document.getElementById('fr').value.trim();
-  if(!nombre||!campo||!resp){alert('Por favor completa nombre, campo y responsable.');return;}
-  const datos={nombre,campo,responsable:resp,inicio:document.getElementById('fi').value,fin:document.getElementById('ff').value,estado:document.getElementById('fe').value,desc:document.getElementById('fd').value.trim(),photo:pp};
+  if(!nombre||!campo||!resp){alert('Completa nombre, campo y responsable.');return;}
   const obs=document.getElementById('fo').value.trim();
   setSyncing(true);
   try{
     if(eid){
       const p=DB.find(x=>x.id===eid);
-      Object.assign(p,datos);
-      if(obs)p.updates.push({fecha:new Date().toISOString().slice(0,10),texto:obs});
+      Object.assign(p,{nombre,campo,responsable:resp,inicio:document.getElementById('fi').value,fin:document.getElementById('ff').value,estado:document.getElementById('fe').value,desc:document.getElementById('fd').value.trim(),photos:[...pendingPhotos]});
+      if(obs)p.updates.push({fecha:today(),autor:currentUser,texto:obs,photos:[]});
       await updateRow(p);
-    } else {
-      const p={id:nid++,...datos,updates:[]};
-      if(obs)p.updates.push({fecha:new Date().toISOString().slice(0,10),texto:obs});
+    }else{
+      const p={id:nid++,nombre,campo,responsable:resp,inicio:document.getElementById('fi').value,fin:document.getElementById('ff').value,estado:document.getElementById('fe').value,desc:document.getElementById('fd').value.trim(),photos:[...pendingPhotos],updates:[]};
+      if(obs)p.updates.push({fecha:today(),autor:currentUser,texto:obs,photos:[]});
       await appendRow(p);
       await loadData();
     }
     setSyncing(false);
     document.getElementById('ov').classList.remove('open');
-    toast('✓ Prueba guardada');
-    render();
-  }catch(e){
-    setSyncing(false,'Error',true);
-    toast('Error al guardar: '+e.message);
-  }
+    toast('✓ Prueba guardada');render();
+  }catch(e){setSyncing(false,'Error',true);toast('Error: '+e.message);}
 });
 
-// ── Export ────────────────────────────────────────────────────────────────────
+// ── Export Excel ──────────────────────────────────────────────────────────────
 document.getElementById('bexp').addEventListener('click',()=>{
   const sel=document.getElementById('exc').value;
-  if(!sel){alert('Selecciona un campo o "Todos los campos".');return;}
+  if(!sel){alert('Selecciona un campo.');return;}
   const lista=sel==='__todos__'?DB:DB.filter(p=>p.campo===sel);
   if(!lista.length){alert('No hay pruebas para ese campo.');return;}
   const wb=XLSX.utils.book_new();
   const campos=sel==='__todos__'?[...new Set(lista.map(p=>p.campo))].sort():[sel];
   campos.forEach(campo=>{
     const cp=lista.filter(p=>p.campo===campo);
-    const rows=[['Campo principal','Subcampo','Nombre de la prueba','Responsable','Estado','Fecha inicio','Fecha término','Objetivo / descripción','N° actualizaciones','Última actualización']];
+    const rows=[['Campo','Subcampo','Nombre','Responsable','Estado','Inicio','Término','Descripción','N° actualizaciones','Última actualización','Autor última act.']];
     cp.forEach(p=>{
       const par=parent(p.campo);
-      rows.push([par,par!==p.campo?p.campo:'',p.nombre,p.responsable,p.estado,p.inicio,p.fin||'',p.desc,p.updates.length,p.updates.length?p.updates[p.updates.length-1].texto:'']);
+      const last=p.updates.length?p.updates[p.updates.length-1]:null;
+      rows.push([par,par!==p.campo?p.campo:'',p.nombre,p.responsable,p.estado,p.inicio,p.fin||'',p.desc,p.updates.length,last?last.texto:'',last?last.autor||'':'']);
     });
     const ws=XLSX.utils.aoa_to_sheet(rows);
-    ws['!cols']=[{wch:14},{wch:14},{wch:38},{wch:18},{wch:14},{wch:12},{wch:12},{wch:48},{wch:8},{wch:48}];
+    ws['!cols']=[{wch:13},{wch:13},{wch:36},{wch:18},{wch:13},{wch:11},{wch:11},{wch:46},{wch:8},{wch:46},{wch:16}];
     XLSX.utils.book_append_sheet(wb,ws,campo.substring(0,31));
   });
   XLSX.writeFile(wb,sel==='__todos__'?'pruebas_todos_campos.xlsx':`pruebas_${sel.replace(/[\s\/]/g,'_')}.xlsx`);
@@ -592,7 +627,7 @@ document.getElementById('bexp').addEventListener('click',()=>{
 
 ['fsq','fsc','fse'].forEach(id=>document.getElementById(id).addEventListener('input',render));
 
-// ── Init ──────────────────────────────────────────────────────────────────────
+// Init
 window.addEventListener('load',()=>{
   const check=()=>{if(typeof google!=='undefined'&&google.accounts){initGsi();}else{setTimeout(check,200);}};
   check();
